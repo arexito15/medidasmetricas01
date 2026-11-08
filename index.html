@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La escalera de las medidas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap">
+<style>
+:root{--bg:#EEF5FB;--ink:#16233B;--card:#fff;--ruler:#FFC93C;--on-ruler:#16233B;--teal:#0B8C7C;--bad:#C93A41;--muted:#4D5B73;--line:#C9D6E6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A2B;--ink:#EAF1FA;--card:#18273D;--teal:#3CC9B6;--bad:#FF7B80;--muted:#A9B8CE;--line:#2D4060}}
+:root[data-theme="dark"]{--bg:#0F1A2B;--ink:#EAF1FA;--card:#18273D;--teal:#3CC9B6;--bad:#FF7B80;--muted:#A9B8CE;--line:#2D4060}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fredoka","Trebuchet MS",system-ui,sans-serif;font-size:18px;line-height:1.45}
+main{max-width:760px;margin:0 auto;padding:16px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+h1{font-size:clamp(28px,6vw,40px);margin:0;line-height:1.1}
+.score{background:var(--ruler);color:var(--on-ruler);font-weight:600;border-radius:999px;padding:6px 16px}
+.lead{color:var(--muted);margin:4px 0 20px}
+section{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px;margin:0 0 20px}
+h2{font-size:24px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 14px}
+.stair{display:flex;align-items:flex-end;gap:4px;border-bottom:4px solid var(--ink);padding-bottom:0}
+.step{flex:1;min-width:0;height:var(--h);background:var(--ruler);color:var(--on-ruler);border:3px solid transparent;border-bottom:0;border-radius:10px 10px 0 0;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px 2px 4px;position:relative}
+.step::before{content:"";position:absolute;left:6px;right:6px;top:4px;height:8px;background:repeating-linear-gradient(90deg,rgba(22,35,59,.6) 0 2px,transparent 2px 8px)}
+.step.on{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal)}
+.abbr{font-weight:600;font-size:clamp(17px,4.6vw,24px)}
+.nm{font-size:12px;display:none}
+@media (min-width:600px){.nm{display:block}}
+.axis{display:flex;justify-content:space-between;color:var(--muted);font-size:15px;margin:6px 0 12px}
+.detail{background:var(--bg);border-radius:12px;padding:12px 16px;min-height:130px}
+.detail h3{margin:0 0 4px;font-size:22px}
+.detail p{margin:2px 0}
+.ex{color:var(--teal);font-weight:600}
+.tip{margin-top:12px;border-left:6px solid var(--ruler);padding:4px 12px;font-weight:600}
+.slots{display:flex;gap:6px;margin-bottom:12px}
+.slot{flex:1;height:48px;border:2px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:600}
+.slot.ok{border:2px solid var(--teal);background:var(--teal);color:#fff}
+.pool{display:flex;flex-wrap:wrap;gap:10px}
+.tile,.opt,.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--ink);background:var(--ruler);color:var(--on-ruler);padding:10px 18px;cursor:pointer;min-height:48px}
+.tile.used{visibility:hidden}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){.shake{animation:none;outline:3px solid var(--bad)}}
+.msg{min-height:28px;font-weight:600;margin:12px 0 8px}
+.q{font-size:22px;font-weight:600;margin:0 0 12px}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.opt{background:var(--card);color:var(--ink);display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.opt small{font-weight:400;font-size:14px}
+.opt.ok{background:var(--teal);color:#fff;border-color:var(--teal)}
+.opt.bad{background:var(--bad);color:#fff;border-color:var(--bad)}
+.opt:disabled{cursor:default}
+.fb{margin:12px 0 0;min-height:48px;color:var(--muted)}
+.big{font-size:24px;font-weight:600}
+.btn{background:var(--teal);color:#fff;border-color:var(--teal)}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+<header><h1>La escalera de las medidas</h1><div class="score" aria-live="polite">Estrellas: <span id="stars">0</span></div></header>
+<p class="lead">Para medir longitudes usamos siete unidades. Cada escalón es 10 veces más grande que el anterior.</p>
+
+<section>
+<h2>1. Conoce la escalera</h2>
+<p class="sub">Toca cada escalón para saber qué mide.</p>
+<div class="stair" id="stair"></div>
+<div class="axis"><span>Más pequeña</span><span>Más grande</span></div>
+<div class="detail" id="detail" aria-live="polite"></div>
+<p class="tip">Para subir un escalón, divide entre 10. Para bajar, multiplica por 10.</p>
+</section>
+
+<section>
+<h2>2. Ordena la escalera</h2>
+<p class="sub">Toca las unidades de la más pequeña a la más grande.</p>
+<div class="slots" id="slots"></div>
+<div class="pool" id="pool"></div>
+<p class="msg" id="omsg" aria-live="polite"></p>
+<button class="btn" id="oreset">Empezar de nuevo</button>
+</section>
+
+<section>
+<h2>3. ¿Qué unidad uso?</h2>
+<p class="sub">Elige la unidad que mejor sirve para medir cada cosa.</p>
+<div id="cbox"></div>
+</section>
+
+<section>
+<h2>4. Baja la escalera</h2>
+<p class="sub">Cada escalón que bajas multiplica por 10.</p>
+<div id="vbox"></div>
+</section>
+</main>
+
+<script>
+const U=[
+{s:'mm',n:'milímetro',v:'Es la milésima parte de un metro. Es la unidad más pequeña.',rel:'10 mm = 1 cm',ex:'El grosor de una moneda.'},
+{s:'cm',n:'centímetro',v:'Es la centésima parte de un metro.',rel:'1 cm = 10 mm',ex:'El ancho de tu uña.'},
+{s:'dm',n:'decímetro',v:'Es la décima parte de un metro.',rel:'1 dm = 10 cm',ex:'Más o menos el ancho de tu mano.'},
+{s:'m',n:'metro',v:'Es la unidad base de todas las longitudes.',rel:'1 m = 10 dm',ex:'Una puerta mide cerca de 2 m.'},
+{s:'dam',n:'decámetro',v:'Mide 10 metros.',rel:'1 dam = 10 m',ex:'Un bus largo mide cerca de 1 dam.'},
+{s:'hm',n:'hectómetro',v:'Mide 100 metros.',rel:'1 hm = 10 dam',ex:'Una cancha de fútbol mide cerca de 1 hm.'},
+{s:'km',n:'kilómetro',v:'Mide 1000 metros. Es la unidad más grande.',rel:'1 km = 10 hm',ex:'La distancia entre dos ciudades.'}];
+const ITEMS=[['El grosor de una moneda',0],['El ancho de tu uña',1],['El ancho de tu mano',2],['La altura de una puerta',3],['El largo de un bus',4],['El largo de una cancha de fútbol',5],['La distancia entre dos ciudades',6]];
+const $=s=>document.querySelector(s);
+let stars=0;
+function star(){stars++;$('#stars').textContent=stars}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* 1. Escalera */
+const stair=$('#stair');
+U.forEach((u,i)=>{const b=document.createElement('button');b.className='step';b.style.setProperty('--h',(84+i*30)+'px');b.setAttribute('aria-label',u.n);b.innerHTML='<span class="abbr">'+u.s+'</span><span class="nm">'+u.n+'</span>';b.onclick=()=>show(i);stair.appendChild(b)});
+function show(i){[...stair.children].forEach((c,k)=>c.classList.toggle('on',k===i));const u=U[i];$('#detail').innerHTML='<h3>'+u.n+' ('+u.s+')</h3><p>'+u.v+'</p><p>'+u.rel+'</p><p class="ex">'+u.ex+'</p>'}
+show(0);
+
+/* 2. Ordenar */
+let next=0;
+function startOrder(){next=0;$('#slots').innerHTML=U.map(()=>'<div class="slot"></div>').join('');const pool=$('#pool');pool.innerHTML='';shuffle(U.map((u,i)=>i)).forEach(i=>{const b=document.createElement('button');b.className='tile';b.textContent=U[i].s;b.onclick=()=>pick(i,b);pool.appendChild(b)});$('#omsg').textContent='Busca la medida más pequeña.'}
+function pick(i,b){
+ if(i===next){const sl=$('#slots').children[next];sl.textContent=U[i].s;sl.classList.add('ok');b.classList.add('used');b.disabled=true;next++;
+  if(next===U.length){$('#omsg').textContent='¡Lo lograste! De mm a km, cada escalón es 10 veces más grande.';star()}else $('#omsg').textContent='¡Bien! Ahora busca la siguiente.'}
+ else{b.classList.add('shake');setTimeout(()=>b.classList.remove('shake'),400);$('#omsg').textContent='Esa no es la siguiente. Sube de un escalón en un escalón.'}}
+$('#oreset').onclick=startOrder;startOrder();
+
+/* Cuestionario genérico */
+function quiz(box,qs,replay){
+ let i=0,sc=0;const el=$(box);
+ (function ask(){
+  if(i>=qs.length){el.innerHTML='<p class="big">Acertaste '+sc+' de '+qs.length+'.</p><button class="btn">Jugar otra vez</button>';el.querySelector('button').onclick=replay;return}
+  const q=qs[i];el.innerHTML='<p class="q">'+q.t+'</p><div class="opts"></div><p class="fb">Pregunta '+(i+1)+' de '+qs.length+'</p>';
+  const o=el.querySelector('.opts'),fb=el.querySelector('.fb');
+  q.o.forEach((x,k)=>{const b=document.createElement('button');b.className='opt';b.innerHTML=x;
+   b.onclick=()=>{[...o.children].forEach(c=>c.disabled=true);let wait=900;
+    if(k===q.a){b.classList.add('ok');sc++;star();fb.textContent='¡Correcto!'}
+    else{b.classList.add('bad');o.children[q.a].classList.add('ok');fb.textContent=q.why;wait=2800}
+    setTimeout(()=>{i++;ask()},wait)};
+   o.appendChild(b)});
+ })()}
+
+/* 3. ¿Qué unidad uso? */
+function playChoose(){
+ const qs=shuffle(ITEMS).map(([t,a])=>({t:t+'.',a:0,o:[],why:''}));
+ const base=shuffle(ITEMS);
+ const out=base.map(([t,a])=>{const ids=shuffle([a,...shuffle([0,1,2,3,4,5,6].filter(x=>x!==a)).slice(0,3)]);
+  return{t:t+': ¿en qué unidad se mide mejor?',o:ids.map(x=>U[x].s+'<small>'+U[x].n+'</small>'),a:ids.indexOf(a),why:'La respuesta era '+U[a].n+' ('+U[a].s+'). '+U[a].ex}});
+ quiz('#cbox',out,playChoose)}
+playChoose();
+
+/* 4. Convertir */
+function playConv(){
+ const qs=[];
+ for(let n=0;n<5;n++){
+  const d=1+Math.floor(Math.random()*3),i=d+Math.floor(Math.random()*(7-d)),j=i-d,ans=Math.pow(10,d);
+  qs.push({t:'1 '+U[i].s+' = ___ '+U[j].s,o:['10','100','1000','10000'],a:d-1,
+   why:'De '+U[i].s+' a '+U[j].s+' bajas '+d+(d>1?' escalones':' escalón')+'. Cada uno multiplica por 10, así que son '+ans+'.'})}
+ quiz('#vbox',qs,playConv)}
+playConv();
+</script>
+</body>
+</html>
